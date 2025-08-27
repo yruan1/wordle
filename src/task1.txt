@@ -1,0 +1,14 @@
+1.predefine answer[5 words] -> list 
+condition: English alphabet and case-insensitive
+
+2. 3 statuts :hit, present,miss
+
+
+Solution Expect:
+maximum number of round
+Only can input 5-letter words
+
+guess the words -> win
+guess the words after maximumround->lose
+
+
