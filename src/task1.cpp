@@ -38,12 +38,11 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
         for (int j = 0; j < 5; j++) {
             if (!used[j] && guess[i] == answer[j]) {
                 results[i] = Present;
-                used[j] = true;
+                used[j] = false;
                 break;
             }
         }
     }
-
     return results;
 }
 
