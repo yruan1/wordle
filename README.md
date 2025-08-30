@@ -10,17 +10,17 @@ Step2
 
 # task2
 Step1
-g++ task2-server.cpp -o task2-server
-g++ task2-client.cpp -o task2-client
+g++ task2_server.cpp -o task2_server
+g++ task2_client.cpp -o task2_client
 
 
 Step2
 split terminal
 
 Start the server in one terminal
-./task2-client
+./task2_client
 
 Start the server in another terminal
-./task2-server
+./task2_server
 
 

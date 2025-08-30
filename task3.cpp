@@ -2,145 +2,166 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <ctime>
 #include <cctype>
+#include <map>
+#include <sstream>
+
 using namespace std;
 
+// Enum for feedback
 enum LetterResult { Hit, Present, Miss };
 
-struct Feedback {
-    vector<LetterResult> results;
-    int hits;
-    int presents;
-};
+string resultToString(LetterResult r) {
+    switch (r) {
+        case Hit: return "Hit";
+        case Present: return "Present";
+        case Miss: return "Miss";
+    }
+    return "";
+}
 
-// Evaluate feedback for guess vs answer
-Feedback evaluateGuess(const string& guess, const string& answer) {
-    Feedback fb;
-    fb.results.assign(5, Miss);
-    fb.hits = 0;
-    fb.presents = 0;
-    vector<bool> used(5, false);
+// Evaluate guess against an "answer"
+vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
+    vector<LetterResult> results(5, Miss);
+    vector<bool> used(5,false);
 
-    for (int i = 0; i < 5; i++) {
-        if (guess[i] == answer[i]) {
-            fb.results[i] = Hit;
-            fb.hits++;
-            used[i] = true;
+    // Hits
+    for (int i=0;i<5;i++) {
+        if (guess[i]==answer[i]) {
+            results[i]=Hit;
+            used[i]=true;
         }
     }
-    for (int i = 0; i < 5; i++) {
-        if (fb.results[i] == Hit) continue;
-        for (int j = 0; j < 5; j++) {
-            if (!used[j] && guess[i] == answer[j]) {
-                fb.results[i] = Present;
-                fb.presents++;
-                used[j] = true;
+    // Presents
+    for (int i=0;i<5;i++) {
+        if (results[i]==Hit) continue;
+        for (int j=0;j<5;j++) {
+            if (!used[j] && guess[i]==answer[j]) {
+                results[i]=Present;
+                used[j]=true;
                 break;
             }
         }
     }
-    return fb;
+    return results;
 }
 
-string resultToString(LetterResult r) {
-    if (r == Hit) return "O";
-    if (r == Present) return "?";
-    return "_";
+// Uppercase
+string toUpper(const string& s) {
+    string r=s;
+    for (size_t i=0;i<r.size();i++) r[i]=toupper(r[i]);
+    return r;
 }
 
-// Check if candidate word is consistent with all past rounds
-bool consistentWithHistory(const string& candidate,
-                           const vector<pair<string, Feedback> >& history) {
-    for (size_t i = 0; i < history.size(); i++) {
-        Feedback fb = evaluateGuess(history[i].first, candidate);
-        if (fb.results != history[i].second.results) return false;
-    }
+// Validate
+bool isValidGuess(const string& g) {
+    if (g.size()!=5) return false;
+    for (size_t i=0;i<g.size();i++) if (!isalpha(g[i])) return false;
     return true;
 }
 
-// Choose lowest-score feedback for this guess
-Feedback chooseFeedback(const string& guess,
-                        const vector<string>& candidates,
-                        const vector<pair<string, Feedback> >& history) {
-    bool first = true;
-    Feedback best;
-    for (size_t i = 0; i < candidates.size(); i++) {
-        Feedback fb = evaluateGuess(guess, candidates[i]);
-        if (!consistentWithHistory(candidates[i], history)) continue;
-
-        if (first) { best = fb; first = false; }
-        else {
-            if (fb.hits < best.hits ||
-               (fb.hits == best.hits && fb.presents < best.presents)) {
-                best = fb;
-            }
-        }
+// Score = (hits, presents)
+pair<int,int> scoreResult(const vector<LetterResult>& res) {
+    int h=0,p=0;
+    for (size_t i=0;i<res.size();i++) {
+        if (res[i]==Hit) h++;
+        else if (res[i]==Present) p++;
     }
-    return best;
+    return make_pair(h,p);
+}
+
+// Compare scores: more hits better, then more presents better
+bool betterScore(const pair<int,int>& a, const pair<int,int>& b) {
+    if (a.first!=b.first) return a.first>b.first;
+    return a.second>b.second;
+}
+
+// Helper: int -> string (for C++98)
+string intToString(int x) {
+    stringstream ss; ss<<x; return ss.str();
 }
 
 int main() {
+    // Word list (dictionary)
     vector<string> wordList;
-    wordList.push_back("HELLO");
-    wordList.push_back("WORLD");
-    wordList.push_back("QUITE");
-    wordList.push_back("FANCY");
-    wordList.push_back("FRESH");
-    wordList.push_back("PANIC");
-    wordList.push_back("CRAZY");
-    wordList.push_back("BUGGY");
-    wordList.push_back("SCARE");
+    wordList.push_back("APPLE");
+    wordList.push_back("HOUSE");
+    wordList.push_back("TRAIN");
+    wordList.push_back("CRANE");
+    wordList.push_back("PLANT");
+    wordList.push_back("MONEY");
+    wordList.push_back("WATER");
+    wordList.push_back("LIGHT");
 
-    vector<string> candidates = wordList;
-    vector<pair<string, Feedback> > history;
+    vector<string> candidates=wordList;
 
-    const int maxRounds = 6;
-    cout << "Welcome to Cheating Wordle!\n";
-    for (int round = 1; round <= maxRounds; round++) {
+    const int maxRounds=6;
+    cout<<"Welcome to Wordle (Cheating Host edition)!\n";
+    cout<<"You have "<<maxRounds<<" attempts.\n\n";
+
+    for (int round=1; round<=maxRounds; round++) {
         string guess;
-        cout << "Round " << round << ": Enter guess: ";
-        cin >> guess;
-        for (size_t i = 0; i < guess.size(); i++) guess[i] = toupper(guess[i]);
+        cout<<"Round "<<round<<"/"<<maxRounds<<". Enter guess: ";
+        cin>>guess;
+        guess=toUpper(guess);
 
-        // If only one candidate left, act like normal Wordle
-        Feedback fb;
-        if (candidates.size() == 1) {
-            fb = evaluateGuess(guess, candidates[0]);
-        } else {
-            fb = chooseFeedback(guess, candidates, history);
+        if (!isValidGuess(guess)) {
+            cout<<"Invalid guess. Must be 5 letters A-Z.\n";
+            round--;
+            continue;
         }
 
-        // Filter candidates to those consistent with new feedback
-        vector<string> newList;
-        for (size_t i = 0; i < candidates.size(); i++) {
-            if (consistentWithHistory(candidates[i],
-                    history)) {
-                Feedback candFb = evaluateGuess(guess, candidates[i]);
-                if (candFb.results == fb.results) {
-                    newList.push_back(candidates[i]);
-                }
+        // Group candidates by feedback
+        map< vector<LetterResult>, vector<string> > groups;
+        for (size_t i=0;i<candidates.size();i++) {
+            vector<LetterResult> res=evaluateGuess(guess,candidates[i]);
+            groups[res].push_back(candidates[i]);
+        }
+
+        // Select group with "lowest score"
+        vector<LetterResult> chosenRes;
+        vector<string> chosenGroup;
+        bool first=true;
+        pair<int,int> bestScore=make_pair(999,999);
+
+        map< vector<LetterResult>, vector<string> >::iterator it;
+        for (it=groups.begin(); it!=groups.end(); ++it) {
+            pair<int,int> sc=scoreResult(it->first);
+            if (first || betterScore(bestScore, sc)) {
+                chosenRes=it->first;
+                chosenGroup=it->second;
+                bestScore=sc;
+                first=false;
             }
         }
-        candidates = newList;
-        history.push_back(make_pair(guess, fb));
+
+        candidates=chosenGroup;
 
         // Print feedback
-        for (int i = 0; i < 5; i++) {
-            cout << resultToString(fb.results[i]);
+        cout<<"Result: ";
+        for (int i=0;i<5;i++) {
+            cout<<guess[i]<<"("<<resultToString(chosenRes[i])<<") ";
         }
-        cout << endl;
+        cout<<"\n";
 
-        if (fb.hits == 5) {
-            cout << "You win! Answer: " << guess << endl;
+        // Debug: show remaining candidates
+        cout<<"Remaining candidates: ";
+        for (size_t i=0;i<candidates.size();i++) {
+            cout<<candidates[i]<<" ";
+        }
+        cout<<"\n";
+
+        // Win condition
+        if (candidates.size()==1 && guess==candidates[0]) {
+            cout<<"Congratulations! You guessed the word: "<<candidates[0]<<"\n";
             return 0;
         }
     }
-    // Game over
+
     if (!candidates.empty()) {
-        cout << "Game over! Answer was: " << candidates[0] << endl;
+        cout<<"Game over! The word was: "<<candidates[0]<<"\n";
     } else {
-        cout << "Game over! (no candidate left)" << endl;
+        cout<<"Game over! No candidates left.\n";
     }
     return 0;
 }
