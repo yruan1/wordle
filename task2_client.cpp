@@ -69,52 +69,15 @@ bool isValidGuess(const string& guess) {
 int main() {
     // Configuration
     const int maxRounds = 6;  // configurable
-    vector<string> wordList;
-    wordList.push_back("APPLE");
-    wordList.push_back("HOUSE");
-    wordList.push_back("TRAIN");
-    wordList.push_back("CRANE");
-    wordList.push_back("PLANT");
-    wordList.push_back("MONEY");
-    wordList.push_back("WATER");
-    wordList.push_back("LIGHT");
+    vector<string> wordList = {"APPLE","HOUSE","TRAIN","CRANE","PLANT","MONEY","WATER","LIGHT"};
 
-    // Randomly pick an answer
     srand((unsigned)time(NULL));
     string answer = wordList[rand() % wordList.size()];
 
-    cout << "Welcome to Wordle (C++ edition)!\n";
-    cout << "You have " << maxRounds << " attempts to guess the 5-letter word.\n\n";
-
-    for (int round = 1; round <= maxRounds; round++) {
-        string guess;
-        cout << "Round " << round << "/" << maxRounds << ". Enter your 5-letter guess: ";
-        cin >> guess;
-        guess = toUpper(guess);
-
-        // Check validity
-        if (!isValidGuess(guess)) {
-            cout << "Invalid guess. Must be exactly 5 letters A-Z.\n";
-            round--; // don’t count invalid guesses as attempts
-            continue;
-        }
-
-        vector<LetterResult> results = evaluateGuess(guess, answer);
-
-        // Print feedback
-        cout << "Result: ";
-        for (int i = 0; i < 5; i++) {
-            cout << guess[i] << "(" << resultToString(results[i]) << ") ";
-        }
-        cout << "\n";
-
-        // Check win condition
-        if (guess == answer) {
-            cout << "Congratulations! You guessed the word: " << answer << "\n";
-            return 0;
-        }
-    }
-
-    cout << "Game over! The correct word was: " << answer << "\n";
-    return 0;
+    // Setup server socket
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+    const int PORT = 8080;
 }
