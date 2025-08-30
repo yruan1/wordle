@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <ctime>
+#include <cctype> // for isalpha
 
 using namespace std;
 
@@ -38,7 +39,7 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
         for (int j = 0; j < 5; j++) {
             if (!used[j] && guess[i] == answer[j]) {
                 results[i] = Present;
-                used[j] = false;
+                used[j] = true; // fix: mark as used
                 break;
             }
         }
@@ -53,7 +54,14 @@ string toUpper(const string& s) {
     return result;
 }
 
-
+// Validate guess: must be 5 letters only
+bool isValidGuess(const string& guess) {
+    if (guess.size() != 5) return false;
+    for (char c : guess) {
+        if (!isalpha(c)) return false; // reject numbers or symbols
+    }
+    return true;
+}
 
 int main() {
     // Configuration
@@ -81,11 +89,12 @@ int main() {
         cin >> guess;
         guess = toUpper(guess);
 
-        if (guess.size() != 5) {
-            cout << "Invalid guess. Must be 5 letters.\n";
+        // Check validity
+        if (!isValidGuess(guess)) {
+            cout << "Invalid guess. Must be exactly 5 letters A-Z.\n";
+            round--; // don’t count invalid guesses as attempts
             continue;
         }
-      
 
         vector<LetterResult> results = evaluateGuess(guess, answer);
 
