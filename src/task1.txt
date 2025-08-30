@@ -11,4 +11,5 @@ Only can input 5-letter words
 guess the words -> win
 guess the words after maximumround->lose
 
+one word can only match onetimes apple->ppppp should only two words have hit or present
 

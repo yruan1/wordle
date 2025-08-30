@@ -53,6 +53,8 @@ string toUpper(const string& s) {
     return result;
 }
 
+
+
 int main() {
     // Configuration
     const int maxRounds = 6;  // configurable
@@ -81,9 +83,9 @@ int main() {
 
         if (guess.size() != 5) {
             cout << "Invalid guess. Must be 5 letters.\n";
-            round--;
             continue;
         }
+      
 
         vector<LetterResult> results = evaluateGuess(guess, answer);
 
