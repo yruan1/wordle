@@ -10,9 +10,10 @@
 
 using namespace std;
 
-// Enum for feedback
+// Enum for feedback (old-style)
 enum LetterResult { Hit, Present, Miss };
 
+// Function to convert LetterResult to string
 string resultToString(LetterResult r) {
     switch (r) {
         case Hit: return "Hit";
@@ -27,18 +28,21 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
     vector<LetterResult> results(5, Miss);
     vector<bool> used(5, false);
 
+    // First pass: check for exact matches (Hit)
     for (int i = 0; i < 5; i++) {
         if (guess[i] == answer[i]) {
             results[i] = Hit;
             used[i] = true;
         }
     }
+
+    // Second pass: check for Present letters
     for (int i = 0; i < 5; i++) {
         if (results[i] == Hit) continue;
         for (int j = 0; j < 5; j++) {
             if (!used[j] && guess[i] == answer[j]) {
                 results[i] = Present;
-                used[j] = true;
+                used[j] = true; // fix: mark as used
                 break;
             }
         }
@@ -46,24 +50,25 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
     return results;
 }
 
+// Convert string to uppercase for consistency
 string toUpper(const string& s) {
     string result = s;
     transform(result.begin(), result.end(), result.begin(), ::toupper);
     return result;
 }
 
+// Validate guess: must be 5 letters only
 bool isValidGuess(const string& guess) {
     if (guess.size() != 5) return false;
-    for (int i = 0; i < 5; i++) {
-        if (!isalpha(guess[i])) return false;
+    for (char c : guess) {
+        if (!isalpha(c)) return false; // reject numbers or symbols
     }
     return true;
 }
 
 int main() {
-    const int PORT = 8080;
-    const int maxRounds = 6;
-
+    // Configuration
+    const int maxRounds = 6;  // configurable
     vector<string> wordList;
     wordList.push_back("APPLE");
     wordList.push_back("HOUSE");
@@ -74,63 +79,42 @@ int main() {
     wordList.push_back("WATER");
     wordList.push_back("LIGHT");
 
+    // Randomly pick an answer
     srand((unsigned)time(NULL));
     string answer = wordList[rand() % wordList.size()];
 
-    int server_fd, client_fd;
-    struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
-
-    bind(server_fd, (struct sockaddr*)&address, sizeof(address));
-    listen(server_fd, 1);
-
-    cout << "Server running. Waiting for client..." << endl;
-    client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-    cout << "Client connected." << endl;
+    cout << "Welcome to Wordle (C++ edition)!\n";
+    cout << "You have " << maxRounds << " attempts to guess the 5-letter word.\n\n";
 
     for (int round = 1; round <= maxRounds; round++) {
-        char buffer[1024] = {0};
-        int valread = read(client_fd, buffer, 1024);
-        string guess(buffer);
+        string guess;
+        cout << "Round " << round << "/" << maxRounds << ". Enter your 5-letter guess: ";
+        cin >> guess;
         guess = toUpper(guess);
 
+        // Check validity
         if (!isValidGuess(guess)) {
-            string msg = "Invalid\n";
-            send(client_fd, msg.c_str(), msg.size(), 0);
-            round--; // invalid input doesn't count
+            cout << "Invalid guess. Must be exactly 5 letters A-Z.\n";
+            round--; // don’t count invalid guesses as attempts
             continue;
         }
 
         vector<LetterResult> results = evaluateGuess(guess, answer);
-        string feedback = "Result ";
-        for (int i = 0; i < 5; i++) {
-            feedback += guess[i];
-            feedback += "(" + resultToString(results[i]) + ") ";
-        }
-        feedback += "\n";
-        send(client_fd, feedback.c_str(), feedback.size(), 0);
 
+        // Print feedback
+        cout << "Result: ";
+        for (int i = 0; i < 5; i++) {
+            cout << guess[i] << "(" << resultToString(results[i]) << ") ";
+        }
+        cout << "\n";
+
+        // Check win condition
         if (guess == answer) {
-            string winMsg = "WIN " + answer + "\n";
-            send(client_fd, winMsg.c_str(), winMsg.size(), 0);
-            close(client_fd);
-            close(server_fd);
+            cout << "Congratulations! You guessed the word: " << answer << "\n";
             return 0;
         }
     }
 
-    string loseMsg = "LOSE " + answer + "\n";
-    send(client_fd, loseMsg.c_str(), loseMsg.size(), 0);
-    close(client_fd);
-    close(server_fd);
-
+    cout << "Game over! The correct word was: " << answer << "\n";
     return 0;
 }
