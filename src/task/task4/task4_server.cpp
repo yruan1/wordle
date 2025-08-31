@@ -123,7 +123,7 @@ int main() {
         guess1 = toUpper(guess1);
         guess2 = toUpper(guess2);
 
-        // 🔹 驗證輸入是否為 dictionary 單詞
+        //  驗證輸入是否為 dictionary 單詞
         if (!isAlphaOnly(guess1) || !isInDictionary(guess1, wordList)) {
             string msg = "Invalid word. Try again.\n";
             send(client1, msg.c_str(), msg.size(), 0);

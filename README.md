@@ -1,6 +1,6 @@
 # wordle
 
-1.predefine answer[5 words] -> list 
+1. predefine answer[5 words] -> list 
 condition: English alphabet and case-insensitive
 
 2. 3 statuts :hit, present,miss
@@ -22,6 +22,7 @@ Step1
 g++ task1.cpp -o task1
 
 Step2
+type in the terminal
 ./task1
 
 
@@ -41,9 +42,16 @@ Start the server in one terminal
 Start the server in another terminal
 ./task2_server
 
+# task3
+g++ task3.cpp -o task3
+
+type in the terminal
+./task3
 
 
-#task4
+
+
+# task4
 g++ task4_server.cpp -o task4_server
 g++ task4_client.cpp -o task4_client
 
