@@ -37,3 +37,7 @@ host cheating
 否則繼續
 ↓
 6 回合結束 → 從候選詞隨便挑一個公布為「答案」
+
+That's mean the answer will be dynamic change, let the player hard to find the answer
+
+
