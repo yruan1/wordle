@@ -146,9 +146,9 @@ int main() {
         cout<<"\n";
 
         // Debug: show remaining candidates (optional, comment out for real play)
-        // cout<<"Remaining candidates: ";
+        // cout << "Remaining candidates: ";
         // for (size_t i=0;i<candidates.size();i++) {
-        //     cout<<candidates[i]<<" ";
+        //     cout << candidates[i]<<" ";
         // }
         // cout<<"\n";
 
