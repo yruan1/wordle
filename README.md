@@ -24,3 +24,16 @@ Start the server in another terminal
 ./task2_server
 
 
+
+#task4
+g++ task4_server.cpp -o task4_server
+g++ task4_client.cpp -o task4_client
+
+Step2
+split terminal
+
+Start the server in one terminal
+./task4_server
+
+Start the server in another terminal
+./task4_client
