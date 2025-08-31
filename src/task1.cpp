@@ -7,10 +7,10 @@
 
 using namespace std;
 
-// Enum for feedback (old-style)
+// Enum for feedback
 enum LetterResult { Hit, Present, Miss };
 
-// Function to convert LetterResult to string
+// Convert feedback to string
 string resultToString(LetterResult r) {
     switch (r) {
         case Hit: return "Hit";
@@ -20,12 +20,12 @@ string resultToString(LetterResult r) {
     return "";
 }
 
-// Evaluate a guess against the answer
+// Evaluate guess against answer
 vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
     vector<LetterResult> results(5, Miss);
     vector<bool> used(5, false);
 
-    // First pass: check for exact matches (Hit)
+    // First pass: exact matches
     for (int i = 0; i < 5; i++) {
         if (guess[i] == answer[i]) {
             results[i] = Hit;
@@ -33,13 +33,13 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
         }
     }
 
-    // Second pass: check for Present letters
+    // Second pass: present matches
     for (int i = 0; i < 5; i++) {
         if (results[i] == Hit) continue;
         for (int j = 0; j < 5; j++) {
             if (!used[j] && guess[i] == answer[j]) {
                 results[i] = Present;
-                used[j] = true; // fix: mark as used
+                used[j] = true;
                 break;
             }
         }
@@ -47,25 +47,36 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
     return results;
 }
 
-// Convert string to uppercase for consistency
+// Convert string to uppercase
 string toUpper(const string& s) {
     string result = s;
-    transform(result.begin(), result.end(), result.begin(), ::toupper);
+    for (size_t i = 0; i < result.size(); i++) {
+        result[i] = toupper(result[i]);
+    }
     return result;
 }
 
-// Validate guess: must be 5 letters only
-bool isValidGuess(const string& guess) {
+// Check if guess is only letters
+bool isAlphaOnly(const string& guess) {
     if (guess.size() != 5) return false;
-    for (char c : guess) {
-        if (!isalpha(c)) return false; // reject numbers or symbols
+    for (size_t i = 0; i < guess.size(); i++) {
+        if (!isalpha(guess[i])) return false;
     }
     return true;
 }
 
+// Check if guess is in dictionary
+bool isInDictionary(const string& guess, const vector<string>& wordList) {
+    for (size_t i = 0; i < wordList.size(); i++) {
+        if (guess == wordList[i]) return true;
+    }
+    return false;
+}
+
 int main() {
-    // Configuration
-    const int maxRounds = 6;  // configurable
+    const int maxRounds = 6;  
+
+    // Word list also acts as dictionary
     vector<string> wordList;
     wordList.push_back("APPLE");
     wordList.push_back("HOUSE");
@@ -76,7 +87,7 @@ int main() {
     wordList.push_back("WATER");
     wordList.push_back("LIGHT");
 
-    // Randomly pick an answer
+    // Pick random answer
     srand((unsigned)time(NULL));
     string answer = wordList[rand() % wordList.size()];
 
@@ -89,10 +100,15 @@ int main() {
         cin >> guess;
         guess = toUpper(guess);
 
-        // Check validity
-        if (!isValidGuess(guess)) {
+        // 🔹 Check validity (letters + dictionary)
+        if (!isAlphaOnly(guess)) {
             cout << "Invalid guess. Must be exactly 5 letters A-Z.\n";
-            round--; // don’t count invalid guesses as attempts
+            round--; 
+            continue;
+        }
+        if (!isInDictionary(guess, wordList)) {
+            cout << "Not in word list. Try another word.\n";
+            round--;
             continue;
         }
 
@@ -105,7 +121,7 @@ int main() {
         }
         cout << "\n";
 
-        // Check win condition
+        // Win check
         if (guess == answer) {
             cout << "Congratulations! You guessed the word: " << answer << "\n";
             return 0;

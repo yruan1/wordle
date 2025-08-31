@@ -11,6 +11,7 @@ using namespace std;
 // Enum for feedback
 enum LetterResult { Hit, Present, Miss };
 
+// Convert feedback to string
 string resultToString(LetterResult r) {
     switch (r) {
         case Hit: return "Hit";
@@ -23,19 +24,19 @@ string resultToString(LetterResult r) {
 // Evaluate guess against an "answer"
 vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
     vector<LetterResult> results(5, Miss);
-    vector<bool> used(5,false);
+    vector<bool> used(5, false);
 
     // Hits
-    for (int i=0;i<5;i++) {
+    for (int i=0; i<5; i++) {
         if (guess[i]==answer[i]) {
             results[i]=Hit;
             used[i]=true;
         }
     }
     // Presents
-    for (int i=0;i<5;i++) {
+    for (int i=0; i<5; i++) {
         if (results[i]==Hit) continue;
-        for (int j=0;j<5;j++) {
+        for (int j=0; j<5; j++) {
             if (!used[j] && guess[i]==answer[j]) {
                 results[i]=Present;
                 used[j]=true;
@@ -70,10 +71,10 @@ pair<int,int> scoreResult(const vector<LetterResult>& res) {
     return make_pair(h,p);
 }
 
-// Compare scores: more hits better, then more presents better
-bool betterScore(const pair<int,int>& a, const pair<int,int>& b) {
-    if (a.first!=b.first) return a.first>b.first;
-    return a.second>b.second;
+// Compare scores: "worse" score = fewer hits, then fewer presents
+bool worseScore(const pair<int,int>& a, const pair<int,int>& b) {
+    if (a.first!=b.first) return a.first<b.first; // fewer hits worse
+    return a.second<b.second;                    // if same hits, fewer presents worse
 }
 
 // Helper: int -> string (for C++98)
@@ -118,38 +119,38 @@ int main() {
             groups[res].push_back(candidates[i]);
         }
 
-        // Select group with "lowest score"
+        // Select group with "worst" score (least hits/presents)
         vector<LetterResult> chosenRes;
         vector<string> chosenGroup;
         bool first=true;
-        pair<int,int> bestScore=make_pair(999,999);
+        pair<int,int> worstScore=make_pair(10,10);
 
         map< vector<LetterResult>, vector<string> >::iterator it;
         for (it=groups.begin(); it!=groups.end(); ++it) {
             pair<int,int> sc=scoreResult(it->first);
-            if (first || betterScore(bestScore, sc)) {
+            if (first || worseScore(sc,worstScore)) {
                 chosenRes=it->first;
                 chosenGroup=it->second;
-                bestScore=sc;
+                worstScore=sc;
                 first=false;
             }
         }
 
         candidates=chosenGroup;
 
-        // Print feedback
+        // Print feedback to player
         cout<<"Result: ";
         for (int i=0;i<5;i++) {
             cout<<guess[i]<<"("<<resultToString(chosenRes[i])<<") ";
         }
         cout<<"\n";
 
-        // Debug: show remaining candidates
-        cout<<"Remaining candidates: ";
-        for (size_t i=0;i<candidates.size();i++) {
-            cout<<candidates[i]<<" ";
-        }
-        cout<<"\n";
+        // Debug: show remaining candidates (optional, comment out for real play)
+        // cout<<"Remaining candidates: ";
+        // for (size_t i=0;i<candidates.size();i++) {
+        //     cout<<candidates[i]<<" ";
+        // }
+        // cout<<"\n";
 
         // Win condition
         if (candidates.size()==1 && guess==candidates[0]) {
@@ -158,6 +159,7 @@ int main() {
         }
     }
 
+    // End of game: reveal a "plausible" answer
     if (!candidates.empty()) {
         cout<<"Game over! The word was: "<<candidates[0]<<"\n";
     } else {

@@ -53,17 +53,27 @@ vector<LetterResult> evaluateGuess(const string& guess, const string& answer) {
 // Convert string to uppercase
 string toUpper(const string& s) {
     string result = s;
-    transform(result.begin(), result.end(), result.begin(), ::toupper);
+    for (size_t i = 0; i < result.size(); i++) {
+        result[i] = toupper(result[i]);
+    }
     return result;
 }
 
-// Validate guess
-bool isValidGuess(const string& guess) {
+// Validate guess length and characters
+bool isAlphaOnly(const string& guess) {
     if (guess.size() != 5) return false;
-    for (char c : guess) {
-        if (!isalpha(c)) return false;
+    for (size_t i = 0; i < guess.size(); i++) {
+        if (!isalpha(guess[i])) return false;
     }
     return true;
+}
+
+// Check if guess is in dictionary
+bool isInDictionary(const string& guess, const vector<string>& wordList) {
+    for (size_t i = 0; i < wordList.size(); i++) {
+        if (guess == wordList[i]) return true;
+    }
+    return false;
 }
 
 int main() {
@@ -86,7 +96,7 @@ int main() {
     int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
-    int addrlen = sizeof(address);
+    socklen_t addrlen = sizeof(address);
     const int PORT = 8080;
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -100,7 +110,7 @@ int main() {
     listen(server_fd, 3);
     cout << "Server started on port " << PORT << "...\n";
 
-    new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
+    new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen);
     cout << "Client connected!\n";
 
     char buffer[1024] = {0};
@@ -114,11 +124,16 @@ int main() {
         string guess(buffer);
         guess = toUpper(guess);
 
-        // Validate
-        if (!isValidGuess(guess)) {
-            string msg = "INVALID";
+        // 🔹 Validate input
+        if (!isAlphaOnly(guess)) {
+            string msg = "INVALID_LENGTH\n";
             send(new_socket, msg.c_str(), msg.size(), 0);
-            continue;
+            continue; // don't count round
+        }
+        if (!isInDictionary(guess, wordList)) {
+            string msg = "INVALID_WORD\n";
+            send(new_socket, msg.c_str(), msg.size(), 0);
+            continue; // don't count round
         }
 
         // Evaluate
@@ -126,7 +141,7 @@ int main() {
 
         // Win condition
         if (guess == answer) {
-            string msg = "WIN " + answer;
+            string msg = "WIN " + answer + "\n";
             send(new_socket, msg.c_str(), msg.size(), 0);
             break;
         }
@@ -136,13 +151,14 @@ int main() {
         for (int i = 0; i < 5; i++) {
             feedback += guess[i] + string("(") + resultToString(results[i]) + ") ";
         }
+        feedback += "\n";
         send(new_socket, feedback.c_str(), feedback.size(), 0);
 
         round++;
     }
 
     if (round > maxRounds) {
-        string msg = "LOSE " + answer;
+        string msg = "LOSE " + answer + "\n";
         send(new_socket, msg.c_str(), msg.size(), 0);
     }
 

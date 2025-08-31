@@ -47,12 +47,19 @@ string toUpper(const string& s) {
     return res;
 }
 
-bool isValidGuess(const string& guess) {
+bool isAlphaOnly(const string& guess) {
     if (guess.size() != 5) return false;
     for (size_t i = 0; i < guess.size(); i++) {
         if (!isalpha(guess[i])) return false;
     }
     return true;
+}
+
+bool isInDictionary(const string& guess, const vector<string>& dict) {
+    for (size_t i = 0; i < dict.size(); i++) {
+        if (guess == dict[i]) return true;
+    }
+    return false;
 }
 
 int main() {
@@ -93,7 +100,6 @@ int main() {
     client2 = accept(server_fd, (struct sockaddr*)&address, &addrlen);
     cout << "Player 2 connected." << endl;
 
-    // 🔹 Notify clients that game starts
     string startMsg = "Both players connected! Game starts now.\n";
     send(client1, startMsg.c_str(), startMsg.size(), 0);
     send(client2, startMsg.c_str(), startMsg.size(), 0);
@@ -117,13 +123,23 @@ int main() {
         guess1 = toUpper(guess1);
         guess2 = toUpper(guess2);
 
-        if (!isValidGuess(guess1)) guess1 = "-----";
-        if (!isValidGuess(guess2)) guess2 = "-----";
+        // 🔹 驗證輸入是否為 dictionary 單詞
+        if (!isAlphaOnly(guess1) || !isInDictionary(guess1, wordList)) {
+            string msg = "Invalid word. Try again.\n";
+            send(client1, msg.c_str(), msg.size(), 0);
+            round--; // 不算回合
+            continue;
+        }
+        if (!isAlphaOnly(guess2) || !isInDictionary(guess2, wordList)) {
+            string msg = "Invalid word. Try again.\n";
+            send(client2, msg.c_str(), msg.size(), 0);
+            round--; // 不算回合
+            continue;
+        }
 
         vector<LetterResult> res1 = evaluateGuess(guess1, answer);
         vector<LetterResult> res2 = evaluateGuess(guess2, answer);
 
-        // 🔹 Add round indicator
         string header = string("--- Round ") + to_string(round) + "/" + to_string(maxRounds) + " ---\n";
 
         string fb1 = "P1 " + guess1 + " ";

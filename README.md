@@ -1,11 +1,29 @@
 # wordle
 
+1.predefine answer[5 words] -> list 
+condition: English alphabet and case-insensitive
+
+2. 3 statuts :hit, present,miss
+
+
+Solution Expect:
+maximum number of round
+Only can input 5-letter words
+
+guess the words -> win
+guess the words after maximumround->lose
+
+one word can only match onetimes apple->ppppp should only two words have hit or present
+
+We assume our wordlist only have words: "apple house train crane plant money water light" to prevents the player input invaild english words.
+
 # task1
 Step1
 g++ task1.cpp -o task1
 
 Step2
 ./task1
+
 
 
 # task2
